@@ -1,6 +1,11 @@
 import pygame
+import sys
 from constants import *
 from player import Player
+from asteroid import Asteroid
+from asteroidfield import AsteroidField
+from shot import Shot
+
 
 
 
@@ -8,8 +13,21 @@ def main():
     pygame.init()
     screen = pygame.display.set_mode((SCREEN_WIDTH,SCREEN_HEIGHT))
     clock = pygame.time.Clock()
-    player = Player(x=SCREEN_WIDTH/2, y=SCREEN_HEIGHT/2)
 
+    updateables = pygame.sprite.Group()
+    drawables = pygame.sprite.Group()
+    asteroids = pygame.sprite.Group()
+    shots = pygame.sprite.Group()
+
+    Player.containers = (updateables, drawables) 
+    Asteroid.containers = (asteroids, drawables, updateables)
+    AsteroidField.containers = updateables
+    Shot.containers = (updateables, drawables, shots)
+
+    asteroid_field = AsteroidField()
+
+    
+    player = Player(SCREEN_WIDTH/2, SCREEN_HEIGHT/2)
     dt = 0
 
     while True:
@@ -17,13 +35,25 @@ def main():
             if event.type == pygame.QUIT:
                 return
             
+        for obj in updateables:
+            obj.update(dt)
+        
+        for ast in asteroids:
+            if ast.collides_with(player):
+                print("Game Over")
+                sys.exit()
+            for bullet in shots:
+                if ast.collides_with(bullet):
+                    ast.split()
+                    bullet.kill()
         screen.fill("black")
-        player.draw(screen)
+
+        for obj in drawables:
+            obj.draw(screen)
 
         pygame.display.flip()
 
-        # framerate limit (60)
-        dt = clock.tick(60) / 1000
+        dt = clock.tick(FRAMES_PER_SECOND) / 1000
         
         
 
